@@ -1,12 +1,12 @@
-# NEXUS
+# SVAR
 
 ## Install
 
-Copy `nexus.py` into your project. Python 3.8+, standard library only, no
+Copy `SVAR.py` into your project. Python 3.8+, standard library only, no
 dependencies.
 
 ```python
-import nexus
+import SVAR
 ```
 
 ## Decision rule
@@ -58,9 +58,9 @@ for that field.
 ### 1. Build source-only resources
 
 ```python
-references = nexus.build_references(train_fields, train_labels)
-profiles   = nexus.index_profiles(source_profiles)
-units      = nexus.UnitTable.load("unit_conversion.csv")   # optional
+references = SVAR.build_references(train_fields, train_labels)
+profiles   = SVAR.index_profiles(source_profiles)
+units      = SVAR.UnitTable.load("unit_conversion.csv")   # optional
 ```
 
 `build_references` picks one representative per concept: the labelled source field
@@ -71,7 +71,7 @@ source-*training* fields belong here.
 
 ```python
 evidence = [
-    nexus.verify(field, proposals[field["field_id"]],
+    SVAR.verify(field, proposals[field["field_id"]],
                  references, profiles,
                  statistics.get(field["field_id"]), units)
     for field in fields
@@ -85,7 +85,7 @@ the distributional distance and score when they exist.
 ### 3. Select parameters on the source domain
 
 ```python
-selection, trials = nexus.calibrate(validation_evidence, validation_labels)
+selection, trials = SVAR.calibrate(validation_evidence, validation_labels)
 params = selection["parameters"]
 ```
 
@@ -95,7 +95,7 @@ validation split; `trials` holds every point that was searched.
 Every declared `(w, rho, eta)` is crossed with every distinct structural score
 observed on the validation split, plus accept-all and reject-all. Selection
 maximises mapping-pair F1; ties break on higher `R`, lower `FAR_U`, lower `FAR_K`,
-then declared order. Pass your own `grid` to override `nexus.DEFAULT_GRID`.
+then declared order. Pass your own `grid` to override `SVAR.DEFAULT_GRID`.
 
 `calibrate` requires a validation split containing both fields with a target and
 fields confirmed to have none — an open-set threshold cannot be chosen otherwise.
@@ -103,8 +103,8 @@ fields confirmed to have none — an open-set threshold cannot be chosen otherwi
 ### 4. Decide, then score
 
 ```python
-rows   = nexus.decide(evidence, params)
-result = nexus.evaluate(gold, rows)
+rows   = SVAR.decide(evidence, params)
+result = SVAR.evaluate(gold, rows)
 ```
 
 Each row of `rows` carries `final_concept_id`, `decision` (`accept` / `abstain`) and
@@ -157,11 +157,11 @@ instead of compatible.
 
 ## Bringing your own proposer
 
-NEXUS is agnostic to what produced the proposal — an LLM, a retriever, a lexical
+SVAR is agnostic to what produced the proposal — an LLM, a retriever, a lexical
 matcher. It only needs a concept id or `UNKNOWN` per field.
 
-For LLM proposers, `nexus.PROPOSAL_SYSTEM_PROMPT`, `nexus.proposal_schema(ids)` and
-`nexus.proposal_messages(field_view, catalog_view)` provide a ready prompt and a
+For LLM proposers, `SVAR.PROPOSAL_SYSTEM_PROMPT`, `SVAR.proposal_schema(ids)` and
+`SVAR.proposal_messages(field_view, catalog_view)` provide a ready prompt and a
 strict JSON response schema. No request is issued; pass the messages to your own
 client.
 
